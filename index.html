@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Home Dashboard</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --accent-color: #8ab4f8;
+            --text-main: #e8eaed;
+        }
+
+        body {
+            margin: 0; padding: 0;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at center, #1e1e2f 0%, #121212 100%);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; overflow: hidden;
+        }
+
+        .container { text-align: center; width: 95%; max-width: 850px; }
+
+        /* 天気エリア */
+        #weather {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: var(--accent-color);
+            height: 35px;
+            font-weight: 300;
+        }
+
+        /* 時計 */
+        #clock {
+            font-size: 100px;
+            font-weight: 100;
+            margin-bottom: 30px;
+            letter-spacing: -3px;
+        }
+
+        /* 検索窓 */
+        .search-box { margin-bottom: 40px; }
+        .search-box input {
+            width: 100%; padding: 16px 28px;
+            border-radius: 50px; border: 1px solid rgba(255,255,255,0.1);
+            font-size: 18px; background: var(--card-bg); color: white;
+            outline: none; backdrop-filter: blur(10px); box-sizing: border-box;
+            transition: 0.3s;
+        }
+        .search-box input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--accent-color);
+        }
+
+        /* リンク集（5カラムに調整） */
+        .links {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-bottom: 40px;
+        }
+        .link-item {
+            padding: 18px 5px;
+            background: var(--card-bg);
+            color: var(--text-main);
+            text-decoration: none;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            font-size: 13px;
+            border: 1px solid transparent;
+        }
+        .link-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-5px);
+            border-color: var(--accent-color);
+        }
+
+        /* メモエリア */
+        .memo-area {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 20px;
+            text-align: left;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .memo-area h3 { margin: 0 0 10px 0; font-size: 11px; color: #777; letter-spacing: 1px; }
+        #memo {
+            width: 100%; height: 80px;
+            background: transparent; border: none;
+            color: #ccc; font-size: 15px;
+            resize: none; outline: none; line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="weather">Loading weather...</div>
+
+    <div id="clock">00:00</div>
+
+    <div class="search-box">
+        <form action="https://www.google.com/search" method="get">
+            <input type="text" name="q" placeholder="Search Google" autofocus autocomplete="off">
+        </form>
+    </div>
+
+    <div class="links">
+        <a href="https://gemini.google.com/" class="link-item">Gemini</a>
+        <a href="https://keep.google.com/" class="link-item">Keep</a>
+        <a href="https://drive.google.com/" class="link-item">Drive</a>
+        <a href="https://youtube.com/" class="link-item">YouTube</a>
+        <a href="https://github.com/" class="link-item">GitHub</a>
+    </div>
+
+    <div class="memo-area">
+        <h3>QUICK MEMO</h3>
+        <textarea id="memo" placeholder="Write something..."></textarea>
+    </div>
+</div>
+
+<script>
+    // 時計の更新
+    function updateClock() {
+        const now = new Date();
+        const h = String(now.getHours()).padStart(2, '0');
+        const m = String(now.getMinutes()).padStart(2, '0');
+        document.getElementById('clock').textContent = `${h}:${m}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // 天気予報の取得（東京明示 + エラー対策）
+    async function fetchWeather() {
+        const weatherEl = document.getElementById('weather');
+        try {
+            // "Tokyo" を明示し、余計なテキストを含まないフォーマットを指定
+            const response = await fetch('https://wttr.in/Tokyo?format=%c+%t');
+            const data = await response.text();
+            
+            // 座標（Unknown location）が含まれている場合は表示しない
+            if (data.includes("Unknown") || data.includes("~")) {
+                weatherEl.textContent = "☀️ Tokyo"; 
+            } else {
+                weatherEl.textContent = data;
+            }
+        } catch (e) {
+            weatherEl.textContent = "☀️ Tokyo"; 
+        }
+    }
+    fetchWeather();
+    setInterval(fetchWeather, 3600000);
+
+    // メモの保存
+    const memo = document.getElementById('memo');
+    memo.value = localStorage.getItem('dash_memo_content') || "";
+    memo.addEventListener('input', () => {
+        localStorage.setItem('dash_memo_content', memo.value);
+    });
+</script>
+
+</body>
+</html>
